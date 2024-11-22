@@ -52,7 +52,7 @@ func findAllEnvFiles() []string {
 }
 
 // Returns a workable *mongo.Client connection to the Turba cluster
-func NewClient() *mongo.Client {
+func NewClient() Client {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(MONGOURI))
 
 	if err != nil {
@@ -61,7 +61,7 @@ func NewClient() *mongo.Client {
 		fmt.Println("[log] conn established")
 	}
 
-	return client
+	return Client{client}
 }
 
 // Finds an item from the given MongoDB Core Collection
