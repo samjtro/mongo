@@ -27,7 +27,7 @@ err = sonic.Unmarshal(bytes, &customer)
 
 // Find All
 var customers []Customer
-bytes, err = c.FindOne("databaseName", "collectionName")
+bytes, err = c.FindAll("databaseName", "collectionName")
 err = sonic.Unmarshal(bytes, &customers)
 
 // Insert
@@ -44,4 +44,3 @@ err = c.ReplaceOne("databaseName", "collectionName", bson.D{{"filterKey", "filte
 // Delete
 err = c.DeleteOne("databaseName", "collectionName", bson.D{{"filterKey", "filterValue"}})
 ```
-

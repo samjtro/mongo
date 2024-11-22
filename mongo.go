@@ -56,6 +56,7 @@ func NewClient() Client {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	log.Printf("Connection established")
 	return Client{client}
 }
 
