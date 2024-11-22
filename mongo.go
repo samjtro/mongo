@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"log"
 	"net"
@@ -54,111 +53,84 @@ func findAllEnvFiles() []string {
 // Returns a workable *mongo.Client connection to the Turba cluster
 func NewClient() Client {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(MONGOURI))
-
 	if err != nil {
-		fmt.Printf("[err] %s", err.Error())
-	} else {
-		fmt.Println("[log] conn established")
+		log.Fatal(err.Error())
 	}
-
 	return Client{client}
 }
 
-// Finds an item from the given MongoDB Core Collection
-func (c Client) FindOne(collectionName string, filter bson.D) []byte {
-	coll := c.Database("test").Collection(collectionName)
-	b, err := coll.FindOne(context.TODO(), filter).Raw()
-
-	if err != nil {
-		fmt.Printf("[ERROR]: %s", err.Error())
-	}
-
-	return b
+// Finds an item from the given MongoDB Collection & Database
+func (c Client) FindOne(databaseName, collectionName string, filter bson.D) ([]byte, error) {
+	coll := c.Database(databaseName).Collection(collectionName)
+	resp, err := coll.FindOne(context.TODO(), filter).Raw()
+	return resp, err
 }
 
-// TODO Get all entries from the given MongoDB Core Collection
-func (c Client) FindAll(collectionName string) interface{} {
-	coll := c.Database("test").Collection(collectionName)
-	var result interface{}
-	err := coll.FindOne(context.TODO(), bson.D{{}}).Decode(&result)
-
-	if err != nil {
-		fmt.Printf("[ERROR]: %s", err.Error())
-	}
-
-	return result
+// Get all entries from the given MongoDB Collection & Database
+func (c Client) FindAll(databaseName, collectionName string) ([]byte, error) {
+	coll := c.Database(databaseName).Collection(collectionName)
+	resp, err := coll.FindOne(context.TODO(), bson.D{{}}).Raw()
+	return resp, err
 }
 
 // Inserts an item into the given MongoDB Core Collection
-func (c Client) InsertOne(collectionName string, item interface{}) {
-	coll := c.Database("test").Collection(collectionName)
+func (c Client) InsertOne(databaseName, collectionName string, item interface{}) error {
+	coll := c.Database(databaseName).Collection(collectionName)
 	_, err := coll.InsertOne(context.TODO(), item)
-
-	if err != nil {
-		fmt.Printf("[ERROR]: %s", err.Error())
-	} else {
-		fmt.Printf("[LOG]: Item Inserted into Collection %s.\n", collectionName)
-	}
+	return err
 }
 
 // Updates the specified item from the given MongoDB Core Collection with the given update
-func (c Client) UpdateOne(collectionName, filterKey, filterValue string, update bson.D) {
-	coll := c.Database("test").Collection(collectionName)
-
+func (c Client) UpdateOne(databaseName, collectionName string, filter, update bson.D) error {
+	coll := c.Database(databaseName).Collection(collectionName)
 	// TODO: Figure out a way to handle this result for errors
-	_, err := coll.UpdateOne(context.TODO(), bson.D{{filterKey, filterValue}}, bson.D{{"$set", update}})
-
+	resp, err := coll.UpdateOne(context.TODO(), filter, bson.D{{"$set", update}})
 	if err != nil {
-		fmt.Printf("[ERROR]: %s", err.Error())
+		return err
 	} else {
-		fmt.Printf("[LOG]: Item Updated in Collection %s.\n", collectionName)
+		log.Printf("%s Updated in Database: %s, Collection: %s\n", resp.UpsertedID.(string), databaseName, collectionName)
 	}
+	return nil
 }
 
 // Replaces the specified item from the given MongoDB Core Collection with the given replacement
-func (c Client) MongoReplaceOne(collectionName, filterKey, filterValue string, replacement interface{}) {
+func (c Client) ReplaceOne(collectionName, databaseName string, filter bson.D, replacement interface{}) error {
 	coll := c.Database("test").Collection(collectionName)
-	_, err := coll.ReplaceOne(context.TODO(), bson.D{{filterKey, filterValue}}, replacement)
-
+	resp, err := coll.ReplaceOne(context.TODO(), filter, replacement)
 	if err != nil {
-		fmt.Printf("[ERROR]: %s", err.Error())
+		return err
 	} else {
-		fmt.Printf("[LOG]: Item Replaced in Collection %s.\n", collectionName)
+		log.Printf("%s Updated in Database: %s, Collection: %s\n", resp.UpsertedID.(string), databaseName, collectionName)
 	}
+	return nil
 }
 
-func (c Client) MongoDeleteOne(collectionName, filterKey, filterValue string) {
-	coll := c.Database("test").Collection(collectionName)
-	_, err := coll.DeleteOne(context.TODO(), bson.D{{filterKey, filterValue}})
-
-	if err != nil {
-		log.Println(err)
-	}
+// Replaces the specified item from the given MongoDB Core Collection with the given replacement
+func (c Client) DeleteOne(databaseName, collectionName string, filter bson.D) error {
+	coll := c.Database(databaseName).Collection(collectionName)
+	_, err := coll.DeleteOne(context.TODO(), filter)
+	return err
 }
 
-func MongoUpdateMultiple() {
+func mongoUpdateMultiple() {
 	//TODO
 }
 
-func MongoInsertMultiple() {
+func mongoInsertMultiple() {
 	//TODO
 }
 
-func MongoDeleteMultiple() {
+func mongoDeleteMultiple() {
 	//TODO
 }
 
 // TODO: Broken []byte conversion of net.IP
 func getOutboundIP() net.IP {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
-
 	if err != nil {
 		log.Println(err)
 	}
-
 	defer conn.Close()
-
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
 	return localAddr.IP
 }
