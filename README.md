@@ -4,12 +4,7 @@ high-level wrapper for [go.mongodb.org/mongo-driver/mongo](https://www.mongodb.c
 
 ## quick start
 
-0. create any file with a `.env` extension:
-
-```
-MONGOURI=<YOUR_MONGODB_CONNECTION_URI>
-```
-
+0. set environment variable `MONGOURI=<YOUR_MONGODB_CONNECTION_URI>`
 1. `go get github.com/samjtro/mongo`
 
 ```go

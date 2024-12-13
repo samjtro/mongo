@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -22,10 +21,6 @@ var (
 type Client struct{ *mongo.Client }
 
 func init() {
-	err := godotenv.Load(findAllEnvFiles()...)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
 	MONGOURI = os.Getenv("MONGOURI")
 }
 
@@ -50,7 +45,7 @@ func findAllEnvFiles() []string {
 	return files
 }
 
-// Returns a workable *mongo.Client connection to the Turba cluster
+// Returns a working Client
 func NewClient() Client {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(MONGOURI))
 	if err != nil {
@@ -74,7 +69,7 @@ func (c Client) FindAll(databaseName, collectionName string) ([]byte, error) {
 	return resp, err
 }
 
-// Inserts an item into the given MongoDB Core Collection
+// Inserts an item into the given MongoDB Collection & Database
 func (c Client) InsertOne(databaseName, collectionName string, item interface{}) error {
 	coll := c.Database(databaseName).Collection(collectionName)
 	_, err := coll.InsertOne(context.TODO(), item)
